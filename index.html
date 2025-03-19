@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mascota Encontrada</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .pet-card {
+            width: 100%;
+            max-width: 500px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .pet-info {
+            margin-bottom: 15px;
+        }
+        .pet-photo {
+            width: 100%;
+            max-width: 300px;
+            height: auto;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        .qr-generator {
+            margin-top: 30px;
+            padding: 20px;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+            width: 100%;
+            max-width: 500px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        label {
+            font-weight: bold;
+        }
+        .qr-code {
+            margin: 20px 0;
+        }
+        .tabs {
+            display: flex;
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 10px 20px;
+            background-color: #eee;
+            cursor: pointer;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+        }
+        .tab.active {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+            width: 100%;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .contact-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .contact-button {
+            padding: 12px;
+            border-radius: 5px;
+            text-align: center;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .call-button {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .whatsapp-button {
+            background-color: #25D366;
+            color: white;
+        }
+        .map-button {
+            background-color: #4285F4;
+            color: white;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 2s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .instructions {
+            background-color: #f8f9fa;
+            border-left: 4px solid #4CAF50;
+            padding: 15px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="tabs">
+            <div class="tab active" onclick="openTab('view')">Ver Mascota</div>
+            <div class="tab" onclick="openTab('create')">Crear QR</div>
+            <div class="tab" onclick="openTab('setup')">Configuración</div>
+        </div>
+        
+        <!-- Ver información de mascota -->
+        <div id="view" class="tab-content active">
+            <div class="pet-card">
+                <div id="pet-details">
+                    <h2>Mascota Encontrada</h2>
+                    <p>Cargando información...</p>
+                    <div class="loader"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Crear QR para mascota -->
+        <div id="create" class="tab-content">
+            <div class="qr-generator">
+                <h2>Genera el QR para tu mascota</h2>
+                <div>
+                    <label for="petName">Nombre de la mascota:</label>
+                    <input type="text" id="petName" placeholder="Nombre de tu mascota">
+                    
+                    <label for="petDescription">Descripción breve:</label>
+                    <textarea id="petDescription" placeholder="Raza, color, señas particulares"></textarea>
+                    
+                    <label for="ownerName">Nombre del dueño:</label>
+                    <input type="text" id="ownerName" placeholder="Tu nombre">
+                    
+                    <label for="ownerPhone">Teléfono de contacto:</label>
+                    <input type="text" id="ownerPhone" placeholder="Tu número de teléfono">
+                    
+                    <label for="ownerAddress">Dirección:</label>
+                    <input type="text" id="ownerAddress" placeholder="Tu dirección">
+                    
+                    <label for="petPhotoUrl">URL de la foto (opcional):</label>
+                    <input type="text" id="petPhotoUrl" placeholder="https://ejemplo.com/foto-mascota.jpg">
+                    
+                    <button onclick="savePetData()">Guardar datos y generar QR</button>
+                </div>
+                <div class="qr-code" id="qrcode"></div>
+                <p id="qrInstructions" style="display: none;">
+                    Haz clic derecho en el código QR y selecciona "Guardar imagen como..." para descargar.
+                    Imprime el código QR y colócalo en la chapita de tu mascota.
+                </p>
+            </div>
+        </div>
+        
+        <!-- Configuración -->
+        <div id="setup" class="tab-content">
+            <div class="pet-card">
+                <h2>Configuración de Google Sheets</h2>
+                <p>Para usar esta aplicación, necesitas crear un Google Sheet y configurar un script para acceder a los datos.</p>
+                
+                <div class="instructions">
+                    <h3>Instrucciones:</h3>
+                    <ol>
+                        <li>Crea un nuevo Google Sheet: <a href="https://docs.google.com/spreadsheets/create" target="_blank">Crear Google Sheet</a></li>
+                        <li>Agrega estas columnas en la primera fila: id, petName, petDescription, ownerName, ownerPhone, ownerAddress, petPhotoUrl, createdAt</li>
+                        <li>Haz clic en: Extensiones > Apps Script</li>
+                        <li>Copia y pega el código de la sección "Código para Apps Script" de abajo</li>
+                        <li>Guarda (Ctrl+S) y despliega como aplicación web:
+                            <ul>
+                                <li>Ejecutar como: Tu cuenta</li>
+                                <li>Quién tiene acceso: Cualquier persona</li>
+                            </ul>
+                        </li>
+                        <li>Copia la URL de la aplicación web y pégala a continuación:</li>
+                    </ol>
+                    
+                    <label for="sheetsApiUrl">URL de la aplicación web:</label>
+                    <input type="text" id="sheetsApiUrl" placeholder="https://script.google.com/macros/s/...">
+                    <button onclick="saveApiUrl()">Guardar URL</button>
+                    
+                    <h3>Código para Apps Script:</h3>
+                    <pre style="background-color: #f5f5f5; padding: 10px; overflow-x: auto;">
+function doGet(e) {
+  return handleRequest(e);
+}
+
+function doPost(e) {
+  return handleRequest(e);
+}
+
+function handleRequest(e) {
+  var lock = LockService.getScriptLock();
+  lock.tryLock(10000);
+  
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName('Sheet1');
+    
+    var params = e.parameter;
+    var action = params.action;
+    
+    if (action === 'getData') {
+      var id = params.id;
+      var data = getPetData(sheet, id);
+      return ContentService.createTextOutput(JSON.stringify(data))
+        .setMimeType(ContentService.MimeType.JSON);
+    } 
+    else if (action === 'saveData') {
+      var data = JSON.parse(params.data);
+      var id = savePetData(sheet, data);
+      return ContentService.createTextOutput(JSON.stringify({id: id}))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+  } 
+  catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({error: error.message}))
+      .setMimeType(ContentService.MimeType.JSON);
+  } 
+  finally {
+    lock.releaseLock();
+  }
+}
+
+function getPetData(sheet, id) {
+  var data = sheet.getDataRange().getValues();
+  var headers = data[0];
+  
+  for (var i = 1; i < data.length; i++) {
+    if (data[i][0] === id) {
+      var rowData = data[i];
+      var result = {};
+      
+      for (var j = 0; j < headers.length; j++) {
+        result[headers[j]] = rowData[j];
+      }
+      
+      return result;
+    }
+  }
+  
+  return { error: 'No se encontró ninguna mascota con ese ID' };
+}
+
+function savePetData(sheet, data) {
+  var id = Utilities.getUuid();
+  data.id = id;
+  data.createdAt = new Date().toISOString();
+  
+  var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  var row = [];
+  
+  for (var i = 0; i < headers.length; i++) {
+    row.push(data[headers[i]] || '');
+  }
+  
+  sheet.appendRow(row);
+  return id;
+}
+</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Detectar si hay parámetros en la URL
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('id')) {
+                const petId = urlParams.get('id');
+                fetchPetData(petId);
+            }
+            
+            // Cargar URL de la API si está guardada
+            const apiUrl = localStorage.getItem('sheetsApiUrl');
+            if (apiUrl) {
+                document.getElementById('sheetsApiUrl').value = apiUrl;
+            }
+        };
+
+        function fetchPetData(petId) {
+            const apiUrl = localStorage.getItem('sheetsApiUrl');
+            if (!apiUrl) {
+                document.getElementById('pet-details').innerHTML = '<h2>Error</h2><p>No se ha configurado la URL de la API. Por favor, ve a la pestaña de Configuración.</p>';
+                return;
+            }
+            
+            const url = `${apiUrl}?action=getData&id=${petId}`;
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        document.getElementById('pet-details').innerHTML = `<h2>Error</h2><p>${data.error}</p>`;
+                    } else {
+                        displayPetInfo(data);
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('pet-details').innerHTML = `<h2>Error</h2><p>No se pudo cargar la información: ${error.message}</p>`;
+                });
+        }
+
+        function displayPetInfo(petData) {
+            let html = `
+                <h2>${petData.petName}</h2>
+            `;
+
+            if (petData.petPhotoUrl) {
+                html += `<img src="${petData.petPhotoUrl}" alt="${petData.petName}" class="pet-photo">`;
+            }
+
+            html += `
+                <div class="pet-info">
+                    <p><strong>Descripción:</strong> ${petData.petDescription}</p>
+                    <p><strong>Dueño:</strong> ${petData.ownerName}</p>
+                </div>
+                
+                <div class="contact-buttons">
+                    <a href="tel:${petData.ownerPhone}" class="contact-button call-button">📞 Llamar al dueño</a>
+                    <a href="https://wa.me/${petData.ownerPhone.replace(/\D/g,'')}" class="contact-button whatsapp-button">💬 Contactar por WhatsApp</a>
+            `;
+
+            if (petData.ownerAddress) {
+                const encodedAddress = encodeURIComponent(petData.ownerAddress);
+                html += `<a href="https://maps.google.com/?q=${encodedAddress}" class="contact-button map-button">🗺️ Ver en el mapa</a>`;
+            }
+
+            html += `</div>`;
+            document.getElementById('pet-details').innerHTML = html;
+        }
+
+        function openTab(tabName) {
+            const tabs = document.getElementsByClassName('tab');
+            const tabContents = document.getElementsByClassName('tab-content');
+            
+            // Desactivar todas las pestañas
+            for (let i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove('active');
+            }
+            
+            // Ocultar todos los contenidos
+            for (let i = 0; i < tabContents.length; i++) {
+                tabContents[i].classList.remove('active');
+            }
+            
+            // Activar la pestaña seleccionada
+            document.getElementById(tabName).classList.add('active');
+            // Activar el botón correspondiente
+            for (let i = 0; i < tabs.length; i++) {
+                if (tabs[i].textContent.toLowerCase().includes(tabName)) {
+                    tabs[i].classList.add('active');
+                }
+            }
+        }
+
+        function saveApiUrl() {
+            const apiUrl = document.getElementById('sheetsApiUrl').value.trim();
+            if (apiUrl) {
+                localStorage.setItem('sheetsApiUrl', apiUrl);
+                alert('URL guardada correctamente.');
+            } else {
+                alert('Por favor, introduce una URL válida.');
+            }
+        }
+
+        function savePetData() {
+            const petName = document.getElementById('petName').value.trim();
+            const petDescription = document.getElementById('petDescription').value.trim();
+            const ownerName = document.getElementById('ownerName').value.trim();
+            const ownerPhone = document.getElementById('ownerPhone').value.trim();
+            const ownerAddress = document.getElementById('ownerAddress').value.trim();
+            const petPhotoUrl = document.getElementById('petPhotoUrl').value.trim();
+            
+            if (!petName || !ownerName || !ownerPhone) {
+                alert('Por favor, completa al menos el nombre de la mascota, tu nombre y tu teléfono.');
+                return;
+            }
+            
+            const apiUrl = localStorage.getItem('sheetsApiUrl');
+            if (!apiUrl) {
+                alert('No se ha configurado la URL de la API. Por favor, ve a la pestaña de Configuración.');
+                openTab('setup');
+                return;
+            }
+            
+            // Crear objeto con datos
+            const data = {
+                petName,
+                petDescription,
+                ownerName,
+                ownerPhone,
+                ownerAddress,
+                petPhotoUrl
+            };
+            
+            // Guardar datos en Google Sheets
+            fetch(`${apiUrl}?action=saveData`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `data=${encodeURIComponent(JSON.stringify(data))}`
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.error) {
+                    alert(`Error: ${result.error}`);
+                } else {
+                    generateQRForPet(result.id);
+                }
+            })
+            .catch(error => {
+                alert(`Error al guardar datos: ${error.message}`);
+            });
+        }
+
+        function generateQRForPet(petId) {
+            // URL de la página actual + ID de la mascota
+            const currentUrl = window.location.href.split('?')[0];
+            const qrData = `${currentUrl}?id=${petId}`;
+            
+            // Generar QR
+            const qrcode = document.getElementById('qrcode');
+            qrcode.innerHTML = '';
+            new QRCode(qrcode, {
+                text: qrData,
+                width: 200,
+                height: 200,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
+            });
+            
+            document.getElementById('qrInstructions').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
