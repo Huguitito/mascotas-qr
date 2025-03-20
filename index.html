@@ -297,6 +297,36 @@
             opacity: 1;
         }
 
+        /* Modal para contraseña */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background-color: var(--card-color);
+            margin: 15% auto;
+            padding: 24px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            width: 90%;
+            max-width: 400px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
         /* Responsive adjustments */
         @media (max-width: 480px) {
             .tab {
@@ -314,6 +344,10 @@
             
             body {
                 padding: 8px;
+            }
+
+            .modal-content {
+                margin: 30% auto;
             }
         }
 
@@ -342,8 +376,8 @@
     <div class="container">
         <div class="tabs" id="tabsContainer">
             <div class="tab active" onclick="openTab('view')">Ver Mascota</div>
-            <div class="tab" onclick="openTab('create')">Crear QR</div>
-            <div class="tab" onclick="openTab('setup')">Configuración</div>
+            <div class="tab" onclick="requestPasswordForTab('create')">Crear QR</div>
+            <div class="tab" onclick="requestPasswordForTab('setup')">Configuración</div>
         </div>
         
         <!-- Ver información de mascota -->
@@ -499,6 +533,16 @@ function savePetData(sheet, data) {
         </div>
     </div>
 
+    <!-- Modal para contraseña -->
+    <div id="passwordModal" class="modal">
+        <div class="modal-content">
+            <h2>Ingresar contraseña</h2>
+            <p>Por favor, ingrese la contraseña para acceder a esta sección:</p>
+            <input type="password" id="passwordInput" placeholder="Contraseña">
+            <button id="submitPassword">Acceder</button>
+        </div>
+    </div>
+
     <!-- Toast notification -->
     <div id="toast" class="toast"></div>
 
@@ -506,6 +550,12 @@ function savePetData(sheet, data) {
         // Definir la URL de la API directamente en el código
         // IMPORTANTE: Reemplaza esto con la URL de tu API de Google Sheets
         const API_URL = "https://script.google.com/macros/s/AKfycbwL2F8UcUFL9aarQDfdLtscvTQjG7Cb86DcDRiWb2kOLIQkg3-NBLhxcEjVHja9H7OS/exec";
+        
+        // Contraseña para acceder a las pestañas protegidas
+        const PASSWORD = "0315";
+        
+        // Variable para almacenar qué pestaña se está intentando abrir
+        let currentTabRequested = '';
         
         // Detectar si hay parámetros en la URL
         window.onload = function() {
@@ -543,7 +593,40 @@ function savePetData(sheet, data) {
                 // Cargar los datos de la mascota
                 fetchPetData(petId);
             }
+            
+            // Configurar el evento para el botón de la contraseña
+            document.getElementById('submitPassword').addEventListener('click', validatePassword);
+            
+            // Permitir enviar la contraseña con Enter
+            document.getElementById('passwordInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    validatePassword();
+                }
+            });
         };
+        
+        // Función para solicitar contraseña para acceder a una pestaña
+        function requestPasswordForTab(tabName) {
+            currentTabRequested = tabName;
+            document.getElementById('passwordInput').value = '';
+            document.getElementById('passwordModal').style.display = 'block';
+            document.getElementById('passwordInput').focus();
+        }
+        
+        // Función para validar la contraseña
+        function validatePassword() {
+            const password = document.getElementById('passwordInput').value;
+            
+            if (password === PASSWORD) {
+                document.getElementById('passwordModal').style.display = 'none';
+                openTab(currentTabRequested);
+                showToast('Acceso concedido');
+            } else {
+                showToast('Contraseña incorrecta');
+                document.getElementById('passwordInput').value = '';
+                document.getElementById('passwordInput').focus();
+            }
+        }
         
         // Función para mostrar toast notifications
         function showToast(message, duration = 3000) {
@@ -744,6 +827,14 @@ function savePetData(sheet, data) {
             });
             
             document.getElementById('qrInstructions').style.display = 'block';
+        }
+
+        // Cerrar el modal cuando se hace clic fuera de él
+        window.onclick = function(event) {
+            const modal = document.getElementById('passwordModal');
+            if (event.target === modal) {
+                modal.style.display = "none";
+            }
         }
     </script>
 </body>
