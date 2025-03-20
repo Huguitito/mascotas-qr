@@ -135,11 +135,14 @@
             padding: 15px;
             margin-top: 20px;
         }
+        .hidden {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="tabs">
+        <div class="tabs" id="tabsContainer">
             <div class="tab active" onclick="openTab('view')">Ver Mascota</div>
             <div class="tab" onclick="openTab('create')">Crear QR</div>
             <div class="tab" onclick="openTab('setup')">Configuración</div>
@@ -303,8 +306,21 @@ function savePetData(sheet, data) {
         // Detectar si hay parámetros en la URL
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
+            
+            // Si hay un ID en la URL, significa que viene de un QR
             if (urlParams.has('id')) {
                 const petId = urlParams.get('id');
+                
+                // Ocultar las pestañas de navegación cuando se accede desde un QR
+                document.getElementById('tabsContainer').classList.add('hidden');
+                
+                // Asegurarse de que solo se muestre la pestaña de "Ver Mascota"
+                openTab('view');
+                
+                // Desactivar la función de cambio de pestaña
+                disableTabSwitching();
+                
+                // Cargar los datos de la mascota
                 fetchPetData(petId);
             }
             
@@ -314,11 +330,24 @@ function savePetData(sheet, data) {
                 document.getElementById('sheetsApiUrl').value = apiUrl;
             }
         };
+        
+        // Función para desactivar el cambio de pestañas
+        function disableTabSwitching() {
+            // Sobrescribir la función openTab para que no haga nada
+            window.originalOpenTab = window.openTab;
+            window.openTab = function(tabName) {
+                // Solo permitir la pestaña 'view'
+                if (tabName !== 'view') {
+                    return;
+                }
+                window.originalOpenTab(tabName);
+            };
+        }
 
         function fetchPetData(petId) {
             const apiUrl = localStorage.getItem('sheetsApiUrl');
             if (!apiUrl) {
-                document.getElementById('pet-details').innerHTML = '<h2>Error</h2><p>No se ha configurado la URL de la API. Por favor, ve a la pestaña de Configuración.</p>';
+                document.getElementById('pet-details').innerHTML = '<h2>Error</h2><p>No se ha configurado la URL de la API. Por favor, contacta al administrador.</p>';
                 return;
             }
             
