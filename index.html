@@ -303,7 +303,6 @@ function savePetData(sheet, data) {
     </div>
 
     <script>
-        // Definir la URL de la API directamente en el código
         // IMPORTANTE: Reemplaza esto con la URL de tu API de Google Sheets
         const API_URL = "https://script.google.com/macros/s/AKfycbwL2F8UcUFL9aarQDfdLtscvTQjG7Cb86DcDRiWb2kOLIQkg3-NBLhxcEjVHja9H7OS/exec";
         
@@ -331,21 +330,16 @@ function savePetData(sheet, data) {
             if (urlParams.has('id')) {
                 const petId = urlParams.get('id');
                 
-                // Ocultar las pestañas de navegación cuando se accede desde un QR
                 document.getElementById('tabsContainer').classList.add('hidden');
                 
-                // Asegurarse de que solo se muestre la pestaña de "Ver Mascota"
                 openTab('view');
                 
-                // Desactivar la función de cambio de pestaña
                 disableTabSwitching();
                 
-                // Cargar los datos de la mascota
                 fetchPetData(petId);
             }
         };
         
-        // Función para desactivar el cambio de pestañas
         function disableTabSwitching() {
             // Sobrescribir la función openTab para que no haga nada
             window.originalOpenTab = window.openTab;
@@ -410,12 +404,10 @@ function savePetData(sheet, data) {
             const tabs = document.getElementsByClassName('tab');
             const tabContents = document.getElementsByClassName('tab-content');
             
-            // Desactivar todas las pestañas
             for (let i = 0; i < tabs.length; i++) {
                 tabs[i].classList.remove('active');
             }
             
-            // Ocultar todos los contenidos
             for (let i = 0; i < tabContents.length; i++) {
                 tabContents[i].classList.remove('active');
             }
@@ -460,7 +452,6 @@ function savePetData(sheet, data) {
                 return;
             }
             
-            // Crear objeto con datos
             const data = {
                 petName,
                 petDescription,
@@ -470,7 +461,6 @@ function savePetData(sheet, data) {
                 petPhotoUrl
             };
             
-            // Guardar datos en Google Sheets
             fetch(`${apiUrl}?action=saveData`, {
                 method: 'POST',
                 headers: {
