@@ -303,9 +303,29 @@ function savePetData(sheet, data) {
     </div>
 
     <script>
+        // Definir la URL de la API directamente en el código
+        // IMPORTANTE: Reemplaza esto con la URL de tu API de Google Sheets
+        const API_URL = "https://script.google.com/macros/s/AKfycbwL2F8UcUFL9aarQDfdLtscvTQjG7Cb86DcDRiWb2kOLIQkg3-NBLhxcEjVHja9H7OS/exec";
+        
         // Detectar si hay parámetros en la URL
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
+            
+            // Cargar URL de la API si está guardada
+            let apiUrl = API_URL; // Usar la URL predefinida
+            
+            // Si hay un parámetro api en la URL, usarlo
+            if (urlParams.has('api')) {
+                apiUrl = urlParams.get('api');
+            } 
+            // Si hay una URL guardada localmente, usarla
+            else if (localStorage.getItem('sheetsApiUrl')) {
+                apiUrl = localStorage.getItem('sheetsApiUrl');
+            }
+            
+            // Guardar la URL actual
+            localStorage.setItem('sheetsApiUrl', apiUrl);
+            document.getElementById('sheetsApiUrl').value = apiUrl;
             
             // Si hay un ID en la URL, significa que viene de un QR
             if (urlParams.has('id')) {
@@ -322,12 +342,6 @@ function savePetData(sheet, data) {
                 
                 // Cargar los datos de la mascota
                 fetchPetData(petId);
-            }
-            
-            // Cargar URL de la API si está guardada
-            const apiUrl = localStorage.getItem('sheetsApiUrl');
-            if (apiUrl) {
-                document.getElementById('sheetsApiUrl').value = apiUrl;
             }
         };
         
@@ -346,10 +360,6 @@ function savePetData(sheet, data) {
 
         function fetchPetData(petId) {
             const apiUrl = localStorage.getItem('sheetsApiUrl');
-            if (!apiUrl) {
-                document.getElementById('pet-details').innerHTML = '<h2>Error</h2><p>No se ha configurado la URL de la API. Por favor, contacta al administrador.</p>';
-                return;
-            }
             
             const url = `${apiUrl}?action=getData&id=${petId}`;
             
@@ -482,9 +492,10 @@ function savePetData(sheet, data) {
         }
 
         function generateQRForPet(petId) {
-            // URL de la página actual + ID de la mascota
+            // URL de la página actual + ID de la mascota + URL de la API
             const currentUrl = window.location.href.split('?')[0];
-            const qrData = `${currentUrl}?id=${petId}`;
+            const apiUrl = localStorage.getItem('sheetsApiUrl');
+            const qrData = `${currentUrl}?id=${petId}&api=${encodeURIComponent(apiUrl)}`;
             
             // Generar QR
             const qrcode = document.getElementById('qrcode');
